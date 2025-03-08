@@ -165,7 +165,7 @@
     th, td {
       padding: 12px 15px;
       border: 1px solid #ddd;
-      text-align: center; /* Centraliza o texto */
+      text-align: center;
     }
     th {
       background-color: #f0f8ff;
@@ -173,6 +173,14 @@
     }
     tr:nth-child(even) {
       background-color: #fafafa;
+    }
+    /* Responsividade: tabela com scroll horizontal em telas menores */
+    @media screen and (max-width: 768px) {
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
     }
 
     /* Quando o item estiver marcado como visualizado, a linha inteira fica riscada */
@@ -185,7 +193,7 @@
     .actions-container {
       display: flex;
       gap: 5px;
-      justify-content: center; /* Centraliza os botões na célula */
+      justify-content: center;
     }
     .edit-btn,
     .watch-btn,
@@ -253,7 +261,6 @@
       color: #336699;
       margin-top: 20px;
     }
-    /* Estrutura adicional para exibir dados detalhados */
     .report-details {
       margin-top: 20px;
       text-align: center;
@@ -277,6 +284,65 @@
       background: #f9f9f9;
       border-top: 1px solid #eee;
       color: #333;
+    }
+
+    /* Media queries para responsividade em diferentes dispositivos */
+    @media screen and (max-width: 768px) {
+      header h1 {
+        font-size: 1.8rem;
+      }
+      nav a {
+        margin: 0 5px;
+        font-size: 0.9rem;
+      }
+      .container {
+        margin: 10px;
+        padding: 10px;
+      }
+      section {
+        padding: 15px;
+        margin-bottom: 30px;
+      }
+      table {
+        font-size: 0.9rem;
+      }
+      .actions-container button {
+        padding: 3px 6px;
+        font-size: 0.8rem;
+      }
+      .open-modal-btn {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+      }
+      .sync-grid {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 10px;
+      }
+      .sync-card {
+        padding: 10px;
+      }
+      .modal-content {
+        width: 95%;
+      }
+    }
+
+    @media screen and (max-width: 480px) {
+      header h1 {
+        font-size: 1.6rem;
+      }
+      nav {
+        display: flex;
+        flex-direction: column;
+      }
+      nav a {
+        margin: 5px 0;
+      }
+      table, .modal-content, .container {
+        font-size: 0.85rem;
+      }
+      .actions-container {
+        flex-direction: column;
+      }
     }
   </style>
 </head>
@@ -359,7 +425,7 @@
       </div>
     </div>
 
-    <!-- Seção Plataformas de Streaming (com sync-grid e sync-card) -->
+    <!-- Seção Plataformas de Streaming -->
     <section id="sincronizacao">
       <h2>Plataformas de Streaming</h2>
       <p>Acesse suas plataformas de streaming:</p>
@@ -426,13 +492,11 @@
     <!-- Seção Relatórios -->
     <section id="relatorios">
       <h2>Relatórios</h2>
-      <!-- Dados resumidos -->
       <div class="report">
         <p>Total de mídias cadastradas: <span id="totalMediaCount">0</span></p>
         <p>Mídias visualizadas: <span id="watchedCount">0</span></p>
         <p>Mídias não visualizadas: <span id="notWatchedCount">0</span></p>
       </div>
-      <!-- Dados detalhados (por tipo) -->
       <div class="report-details">
         <h3>Resumo por Tipo</h3>
         <ul id="typeReportList"></ul>
@@ -459,7 +523,7 @@
     // ID que indica se estamos editando um item existente
     let currentEditId = null;
 
-    // 1. Renderiza a tabela de mídias
+    // Renderiza a tabela de mídias
     function renderMediaTable() {
       mediaTableBody.innerHTML = "";
       mediaItems.forEach((item) => {
@@ -484,7 +548,7 @@
       });
     }
 
-    // 2. Atualiza os relatórios
+    // Atualiza os relatórios
     function updateReport() {
       const total = mediaItems.length;
       const watched = mediaItems.filter(m => m.watched).length;
@@ -502,7 +566,6 @@
         }
         typeCounts[item.type]++;
       }
-      // Limpa a lista e insere os novos valores
       typeReportList.innerHTML = "";
       for (const [type, count] of Object.entries(typeCounts)) {
         const li = document.createElement('li');
@@ -511,7 +574,7 @@
       }
     }
 
-    // 3. Atualiza localStorage e re-renderiza tudo
+    // Atualiza localStorage e re-renderiza tudo
     function updateLocalStorage() {
       localStorage.setItem('mediaItems', JSON.stringify(mediaItems));
       renderMediaTable();
@@ -548,7 +611,6 @@
         item.watched = false;
       }
       item.watched = !item.watched;
-
       updateLocalStorage();
     }
 
@@ -561,11 +623,9 @@
       const id = parseInt(e.target.getAttribute('data-id'));
       if (e.target.classList.contains('remove-btn')) {
         removeMedia(id);
-      } 
-      else if (e.target.classList.contains('edit-btn')) {
+      } else if (e.target.classList.contains('edit-btn')) {
         editMedia(id);
-      }
-      else if (e.target.classList.contains('watch-btn')) {
+      } else if (e.target.classList.contains('watch-btn')) {
         watchMedia(id);
       }
     });
