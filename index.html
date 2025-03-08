@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Controle de Conteúdo Claro</title>
+  <!-- Fonte Google -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* Reset global */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #ffffff, #f8f8f8);
+      color: #333;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    header {
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(5px);
+      padding: 20px;
+      text-align: center;
+      border-bottom: 1px solid #ccc;
+    }
+    header h1 {
+      font-size: 2rem;
+      color: #336699;
+    }
+    nav {
+      margin-top: 10px;
+    }
+    nav a {
+      margin: 0 10px;
+      color: #336699;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+    nav a:hover {
+      color: #6699cc;
+    }
+
+    /* Container principal */
+    .container {
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    /* Seções */
+    section {
+      margin-bottom: 40px;
+      padding: 20px;
+      background: #fdfdfd;
+      border: 1px solid #eee;
+      border-radius: 10px;
+    }
+    section h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #336699;
+    }
+
+    /* Modal para cadastro/edição */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 500px;
+      position: relative;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .modal-content h3 {
+      text-align: center;
+      margin-bottom: 15px;
+      color: #336699;
+    }
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #336699;
+      cursor: pointer;
+    }
+    .modal-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .modal-form label {
+      font-weight: 500;
+      color: #555;
+    }
+    .modal-form input,
+    .modal-form select {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background: #fff;
+      color: #333;
+    }
+    .modal-form button {
+      padding: 10px;
+      background: #336699;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .modal-form button:hover {
+      background: #4d80b3;
+    }
+
+    /* Botão para abrir modal */
+    .open-modal-btn {
+      display: block;
+      margin: 0 auto 20px auto;
+      padding: 10px 20px;
+      background: #336699;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.3s;
+    }
+    .open-modal-btn:hover {
+      background: #4d80b3;
+    }
+
+    /* Tabela de Dados (Catálogo) */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      text-align: center; /* Centraliza o texto */
+    }
+    th {
+      background-color: #f0f8ff;
+      color: #336699;
+    }
+    tr:nth-child(even) {
+      background-color: #fafafa;
+    }
+
+    /* Quando o item estiver marcado como visualizado, a linha inteira fica riscada */
+    .watched td {
+      text-decoration: line-through;
+      color: #666;
+    }
+
+    /* Botões de Ações na Tabela */
+    .actions-container {
+      display: flex;
+      gap: 5px;
+      justify-content: center; /* Centraliza os botões na célula */
+    }
+    .edit-btn,
+    .watch-btn,
+    .remove-btn {
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+      color: #fff;
+    }
+    .edit-btn {
+      background: #ffaa00;
+    }
+    .edit-btn:hover {
+      background: #e69900;
+    }
+    .watch-btn {
+      background: #0066cc;
+    }
+    .watch-btn:hover {
+      background: #004999;
+    }
+    .remove-btn {
+      background: #cc3333;
+    }
+    .remove-btn:hover {
+      background: #a82828;
+    }
+
+    /* Seção Sincronização com "sync-grid" e "sync-card" */
+    .sync-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 20px;
+      margin-top: 15px;
+    }
+    .sync-card {
+      background: #fff;
+      border: 2px solid #a8d0e6;
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+    }
+    .sync-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      background: #f0f8ff;
+    }
+    .sync-card h3 {
+      margin-bottom: 10px;
+      color: #333;
+    }
+    .sync-card p {
+      color: #555;
+      font-size: 0.9rem;
+    }
+
+    /* Relatórios */
+    .report {
+      text-align: center;
+      font-size: 1.2rem;
+      color: #336699;
+      margin-top: 20px;
+    }
+    /* Estrutura adicional para exibir dados detalhados */
+    .report-details {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .report-details p {
+      margin-bottom: 10px;
+    }
+    .report-details ul {
+      list-style: none;
+      padding: 0;
+    }
+    .report-details li {
+      margin-bottom: 5px;
+      color: #444;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #f9f9f9;
+      border-top: 1px solid #eee;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Controle de Conteúdo Claro</h1>
+    <nav>
+      <a href="#catalogo">Catálogo</a>
+      <a href="#sincronizacao">Plataformas</a>
+      <a href="#relatorios">Relatórios</a>
+    </nav>
+  </header>
+  <div class="container">
+    <!-- Seção Catálogo -->
+    <section id="catalogo">
+      <h2>Catálogo de Mídia</h2>
+      <button class="open-modal-btn" id="openModal">Adicionar Mídia</button>
+      <!-- Tabela para exibição dos dados cadastrados -->
+      <table id="mediaTable">
+        <thead>
+          <tr>
+            <th>Título Principal</th>
+            <th>Tipo</th>
+            <th>Plataforma</th>
+            <th>Título do Episódio</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="mediaTableBody">
+          <!-- Linhas serão inseridas aqui -->
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Modal para cadastro/edição -->
+    <div class="modal" id="modal">
+      <div class="modal-content">
+        <button class="close-btn" id="closeModal">&times;</button>
+        <h3 id="modalTitleText">Nova Mídia</h3>
+        <form class="modal-form" id="mediaForm">
+          <input type="hidden" id="editId" value="" />
+          
+          <label for="modalTitle">Título Principal</label>
+          <input type="text" id="modalTitle" placeholder="Digite o título da mídia" required>
+          
+          <label for="modalType">Tipo</label>
+          <select id="modalType" required>
+            <option value="">Selecione o tipo</option>
+            <option value="Filme">Filme</option>
+            <option value="Série">Série</option>
+            <option value="Documentário">Documentário</option>
+            <option value="Anime">Anime</option>
+            <option value="Outro">Outro</option>
+          </select>
+          
+          <label for="modalPlatform">Plataforma</label>
+          <select id="modalPlatform" required>
+            <option value="">Selecione a plataforma</option>
+            <option value="Netflix">Netflix</option>
+            <option value="Prime Video">Prime Video</option>
+            <option value="Disney+">Disney+</option>
+            <option value="HBO Max">HBO Max</option>
+            <option value="Apple TV+">Apple TV+</option>
+            <option value="Paramount+">Paramount+</option>
+            <option value="Peacock">Peacock</option>
+            <option value="Discovery+">Discovery+</option>
+            <option value="Crunchyroll">Crunchyroll</option>
+            <option value="Mubi">Mubi</option>
+            <option value="Starz">Starz</option>
+            <option value="Sling TV">Sling TV</option>
+            <option value="GloboPlay">GloboPlay</option>
+            <option value="Telecine">Telecine</option>
+          </select>
+          
+          <label for="modalEpisode">Título do Episódio</label>
+          <input type="text" id="modalEpisode" placeholder="Digite o título do episódio" required>
+          
+          <button type="submit">Adicionar</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Seção Plataformas de Streaming (com sync-grid e sync-card) -->
+    <section id="sincronizacao">
+      <h2>Plataformas de Streaming</h2>
+      <p>Acesse suas plataformas de streaming:</p>
+      <div class="sync-grid">
+        <div class="sync-card" onclick="window.open('https://www.netflix.com', '_blank')">
+          <h3>Netflix</h3>
+          <p>Clique para acessar</p>
+        </div>
+        <div class="sync-card" onclick="window.open('https://www.primevideo.com', '_blank')">
+          <h3>Prime Video</h3>
+          <p>Clique para acessar</p>
+        </div>
+        <div class="sync-card" onclick="window.open('https://www.disneyplus.com', '_blank')">
+          <h3>Disney+</h3>
+          <p>Clique para acessar</p>
+        </div>
+        <div class="sync-card" onclick="window.open('https://www.hbomax.com', '_blank')">
+          <h3>HBO Max</h3>
+          <p>Clique para acessar</p>
+        </div>
+        <div class="sync-card" onclick="window.open('https://tv.apple.com', '_blank')">
+          <h3>Apple TV+</h3>
+          <p>Clique para acessar</p>
+        </div>
+        <div class="sync-card" onclick="window.open('https://www.paramountplus.com', '_blank')">
+          <h3>Paramount+</h3>
+          <p>Clique para acessar</p>
+        </div>
+        <div class="sync-card" onclick="window.open('https://www.peacocktv.com', '_blank')">
+          <h3>Peacock</h3>
+          <p>Clique para acessar</p>
+        </div>
+        <div class="sync-card" onclick="window.open('https://www.discoveryplus.com', '_blank')">
+          <h3>Discovery+</h3>
+          <p>Clique para acessar</p>
+        </div>
+        <div class="sync-card" onclick="window.open('https://www.crunchyroll.com', '_blank')">
+          <h3>Crunchyroll</h3>
+          <p>Clique para acessar</p>
+        </div>
+        <div class="sync-card" onclick="window.open('https://mubi.com', '_blank')">
+          <h3>Mubi</h3>
+          <p>Clique para acessar</p>
+        </div>
+        <div class="sync-card" onclick="window.open('https://www.starz.com', '_blank')">
+          <h3>Starz</h3>
+          <p>Clique para acessar</p>
+        </div>
+        <div class="sync-card" onclick="window.open('https://www.sling.com', '_blank')">
+          <h3>Sling TV</h3>
+          <p>Clique para acessar</p>
+        </div>
+        <div class="sync-card" onclick="window.open('https://globoplay.globo.com', '_blank')">
+          <h3>GloboPlay</h3>
+          <p>Clique para acessar</p>
+        </div>
+        <div class="sync-card" onclick="window.open('https://www.telecineplay.com.br', '_blank')">
+          <h3>Telecine</h3>
+          <p>Clique para acessar</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Seção Relatórios -->
+    <section id="relatorios">
+      <h2>Relatórios</h2>
+      <!-- Dados resumidos -->
+      <div class="report">
+        <p>Total de mídias cadastradas: <span id="totalMediaCount">0</span></p>
+        <p>Mídias visualizadas: <span id="watchedCount">0</span></p>
+        <p>Mídias não visualizadas: <span id="notWatchedCount">0</span></p>
+      </div>
+      <!-- Dados detalhados (por tipo) -->
+      <div class="report-details">
+        <h3>Resumo por Tipo</h3>
+        <ul id="typeReportList"></ul>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 - Controle de Conteúdo Claro</p>
+  </footer>
+
+  <script>
+    // Recupera ou inicializa o array de mídias no localStorage
+    let mediaItems = JSON.parse(localStorage.getItem('mediaItems')) || [];
+
+    const mediaTableBody = document.getElementById('mediaTableBody');
+
+    // IDs para relatórios
+    const totalMediaCountEl = document.getElementById('totalMediaCount');
+    const watchedCountEl = document.getElementById('watchedCount');
+    const notWatchedCountEl = document.getElementById('notWatchedCount');
+    const typeReportList = document.getElementById('typeReportList');
+
+    // ID que indica se estamos editando um item existente
+    let currentEditId = null;
+
+    // 1. Renderiza a tabela de mídias
+    function renderMediaTable() {
+      mediaTableBody.innerHTML = "";
+      mediaItems.forEach((item) => {
+        const tr = document.createElement('tr');
+        if (item.watched) {
+          tr.classList.add('watched');
+        }
+        tr.innerHTML = `
+          <td>${item.title}</td>
+          <td>${item.type}</td>
+          <td>${item.platform}</td>
+          <td>${item.episode}</td>
+          <td>
+            <div class="actions-container">
+              <button class="edit-btn" data-id="${item.id}">Editar</button>
+              <button class="watch-btn" data-id="${item.id}">Visualizado</button>
+              <button class="remove-btn" data-id="${item.id}">Remover</button>
+            </div>
+          </td>
+        `;
+        mediaTableBody.appendChild(tr);
+      });
+    }
+
+    // 2. Atualiza os relatórios
+    function updateReport() {
+      const total = mediaItems.length;
+      const watched = mediaItems.filter(m => m.watched).length;
+      const notWatched = total - watched;
+
+      totalMediaCountEl.textContent = total;
+      watchedCountEl.textContent = watched;
+      notWatchedCountEl.textContent = notWatched;
+
+      // Resumo por tipo
+      const typeCounts = {};
+      for (const item of mediaItems) {
+        if (!typeCounts[item.type]) {
+          typeCounts[item.type] = 0;
+        }
+        typeCounts[item.type]++;
+      }
+      // Limpa a lista e insere os novos valores
+      typeReportList.innerHTML = "";
+      for (const [type, count] of Object.entries(typeCounts)) {
+        const li = document.createElement('li');
+        li.textContent = `${type}: ${count}`;
+        typeReportList.appendChild(li);
+      }
+    }
+
+    // 3. Atualiza localStorage e re-renderiza tudo
+    function updateLocalStorage() {
+      localStorage.setItem('mediaItems', JSON.stringify(mediaItems));
+      renderMediaTable();
+      updateReport();
+    }
+
+    // Remove um item
+    function removeMedia(id) {
+      mediaItems = mediaItems.filter(item => item.id !== id);
+      updateLocalStorage();
+    }
+
+    // Edita um item
+    function editMedia(id) {
+      const item = mediaItems.find(m => m.id === id);
+      if (!item) return;
+
+      document.getElementById('modalTitleText').textContent = "Editar Mídia";
+      currentEditId = id;
+      document.getElementById('modalTitle').value = item.title;
+      document.getElementById('modalType').value = item.type;
+      document.getElementById('modalPlatform').value = item.platform;
+      document.getElementById('modalEpisode').value = item.episode;
+
+      modal.style.display = 'flex';
+    }
+
+    // Marca/desmarca como visualizado
+    function watchMedia(id) {
+      const item = mediaItems.find(m => m.id === id);
+      if (!item) return;
+
+      if (typeof item.watched === 'undefined') {
+        item.watched = false;
+      }
+      item.watched = !item.watched;
+
+      updateLocalStorage();
+    }
+
+    // Renderiza dados ao carregar
+    renderMediaTable();
+    updateReport();
+
+    // Eventos de clique na tabela
+    mediaTableBody.addEventListener('click', function(e) {
+      const id = parseInt(e.target.getAttribute('data-id'));
+      if (e.target.classList.contains('remove-btn')) {
+        removeMedia(id);
+      } 
+      else if (e.target.classList.contains('edit-btn')) {
+        editMedia(id);
+      }
+      else if (e.target.classList.contains('watch-btn')) {
+        watchMedia(id);
+      }
+    });
+
+    // Modal
+    const openModalBtn = document.getElementById('openModal');
+    const modal = document.getElementById('modal');
+    const closeModalBtn = document.getElementById('closeModal');
+
+    openModalBtn.addEventListener('click', () => {
+      document.getElementById('modalTitleText').textContent = "Nova Mídia";
+      currentEditId = null;
+      mediaForm.reset();
+      modal.style.display = 'flex';
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (e) => {
+      if (e.target === modal) modal.style.display = 'none';
+    });
+
+    // Formulário de cadastro/edição
+    const mediaForm = document.getElementById('mediaForm');
+    mediaForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const title = document.getElementById('modalTitle').value.trim();
+      const type = document.getElementById('modalType').value;
+      const platform = document.getElementById('modalPlatform').value;
+      const episode = document.getElementById('modalEpisode').value.trim();
+
+      if (title === '' || type === '' || platform === '' || episode === '') {
+        alert("Preencha todos os campos.");
+        return;
+      }
+
+      // Edição ou novo cadastro
+      if (currentEditId) {
+        const itemIndex = mediaItems.findIndex(m => m.id === currentEditId);
+        if (itemIndex !== -1) {
+          mediaItems[itemIndex].title = title;
+          mediaItems[itemIndex].type = type;
+          mediaItems[itemIndex].platform = platform;
+          mediaItems[itemIndex].episode = episode;
+        }
+      } else {
+        const newMedia = {
+          id: Date.now(),
+          title,
+          type,
+          platform,
+          episode,
+          watched: false
+        };
+        mediaItems.push(newMedia);
+      }
+
+      updateLocalStorage();
+      mediaForm.reset();
+      modal.style.display = 'none';
+    });
+  </script>
+</body>
+</html>
